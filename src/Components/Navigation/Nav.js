@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../Navigation/Nav.css';
 import SearchIcon from '@mui/icons-material/Search';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AiOutlineHome } from 'react-icons/ai';
 import { LiaUserFriendsSolid } from 'react-icons/lia';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import { TbMessage } from 'react-icons/tb';
-import Profile from '../../assets/profile.jpg';
+import { getUserProfile } from '../../api';
+import { AuthContext } from '../../index';
 
-const Nav = ({ search, setSearch, setShowMenu, profileImg }) => {
+const Nav = ({ search, setSearch, setShowMenu }) => {
+  const { userId } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProfile(userId);
+        setUser(response);
+      } catch (error) {
+        console.error(error.response?.data?.msg || 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) fetchUser();
+  }, [userId]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/';
+    localStorage.removeItem('userId');
+    navigate('/');
   };
 
   return (
@@ -27,7 +49,7 @@ const Nav = ({ search, setSearch, setShowMenu, profileImg }) => {
           <SearchIcon className='search-icon' />
           <input
             type="text"
-            placeholder='Search post'
+            placeholder='Search post or user'
             id='n-search'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -48,7 +70,18 @@ const Nav = ({ search, setSearch, setShowMenu, profileImg }) => {
           className='nav-icons'
           onClick={() => setShowMenu(true)}
         />
-        <button onClick={handleLogout} style={{ marginLeft: '10px', padding: '5px 10px', background: '#ff4d4d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            marginLeft: '10px',
+            padding: '5px 10px',
+            background: '#ff4d4d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
           Đăng xuất
         </button>
       </div>
@@ -56,7 +89,7 @@ const Nav = ({ search, setSearch, setShowMenu, profileImg }) => {
       <div className="n-profile">
         <Link to="/profile">
           <img
-            src={profileImg ? profileImg : Profile}
+            src={user?.profilePicture || '/default-profile.jpg'}
             className='n-img'
             style={{ marginBottom: '-7px' }}
             alt="Profile picture"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
@@ -12,55 +12,52 @@ import { AiFillYoutube } from 'react-icons/ai';
 import { RxTwitterLogo } from 'react-icons/rx';
 import { FiGithub } from 'react-icons/fi';
 import Comments from '../../Comments/Comments';
-import { likePost, commentPost, recommendPost } from '../../../api'; // Sửa đường dẫn: từ src/Components/FriendsProfile/FriendsProfileInfo/ lên src/
+import { likePost, addComment, recommendPost, getComments } from '../../../api';
+import { AuthContext } from '../../../index';
 
 const InfoFriendPost = ({ val }) => {
-  const [comments, setComments] = useState(val.comments || []);
-  const [like, setLike] = useState(val.like || 0);
-  const [unlike, setUnlike] = useState(false);
-  const [filledLike, setFilledLike] = useState(<FavoriteBorderOutlinedIcon />);
-  const [unFilledLike, setUnFilledLike] = useState(false);
+  const { userId } = useContext(AuthContext);
+  const [comments, setComments] = useState([]);
+  const [like, setLike] = useState(val.likes || 0);
+  const [liked, setLiked] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [socialIcons, setSocialIcons] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      setUserId(decoded.id);
-    }
-  }, []);
+    const fetchComments = async () => {
+      try {
+        setLoading(true);
+        const response = await getComments(val.id);
+        setComments(response.comments);
+      } catch (error) {
+        console.error(error.response?.data?.msg || 'Failed to fetch comments');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComments();
+  }, [val.id]);
 
   const handleLikes = async () => {
     try {
-      await likePost(val.id);
-      setLike(unlike ? like - 1 : like + 1);
-      setUnlike(!unlike);
-      setFilledLike(unFilledLike ? <FavoriteBorderOutlinedIcon /> : <FavoriteRoundedIcon />);
-      setUnFilledLike(!unFilledLike);
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to like post');
+      const response = await likePost(val.id);
+      setLike(response.likes);
+      setLiked(response.liked);
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to like post');
     }
   };
 
   const handleCommentInput = async (e) => {
     e.preventDefault();
     try {
-      await commentPost(val.id, commentInput);
-      const newComment = {
-        id: Date.now(),
-        userId: userId,
-        username: 'You',
-        content: commentInput,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-      };
-      setComments([...comments, newComment]);
+      const response = await addComment(val.id, { content: commentInput });
+      setComments([...comments, response]);
       setCommentInput('');
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to comment');
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to comment');
     }
   };
 
@@ -68,8 +65,8 @@ const InfoFriendPost = ({ val }) => {
     try {
       await recommendPost(val.id);
       alert('Post recommended successfully!');
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to recommend post');
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to recommend post');
     }
   };
 
@@ -77,12 +74,12 @@ const InfoFriendPost = ({ val }) => {
     <div className='post' style={{ marginTop: '10px', marginBottom: '65px' }}>
       <div className='post-header'>
         <div className='post-user'>
-          <img src={val.profilePicture || val.profilepicture} className='p-img' alt={`${val.username}'s profile picture`} />
+          <img src={val.profilePicture || '/default-profile.jpg'} className='p-img' alt={`${val.username}'s profile picture`} />
           <h2>{val.username}</h2>
-          <p className='datePara'>{val.createdAt ? new Date(val.createdAt).toLocaleString() : val.datetime}</p>
+          <p className='datePara'>{new Date(val.createdAt).toLocaleString()}</p>
         </div>
       </div>
-      <p className='body'>{val.content || val.body}</p>
+      <p className='body'>{val.content}</p>
       {val.image && <img src={`http://localhost:5000${val.image}`} alt="Post image" className='post-img' />}
       <div className="post-foot">
         <div className="post-footer">
@@ -92,7 +89,7 @@ const InfoFriendPost = ({ val }) => {
               onClick={handleLikes}
               style={{ marginTop: '5px' }}
             >
-              {filledLike}
+              {liked ? <FavoriteRoundedIcon /> : <FavoriteBorderOutlinedIcon />}
             </p>
             <MessageRoundedIcon
               onClick={() => setShowComment(!showComment)}
@@ -146,31 +143,37 @@ const InfoFriendPost = ({ val }) => {
           </div>
           {showComment && (
             <div className="commentSection">
-              <form onSubmit={handleCommentInput}>
-                <div className="cmtGroup">
-                  <SentimentSatisfiedRoundedIcon className='emoji' />
-                  <input
-                    type="text"
-                    id="commentInput"
-                    required
-                    placeholder='Add a comment...'
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    value={commentInput}
-                  />
-                  <button type='submit'>
-                    <SendRoundedIcon className='send' />
-                  </button>
-                </div>
-              </form>
-              <div className="sticky">
-                {comments.map((cmt) => (
-                  <Comments
-                    className="classComment"
-                    cmt={cmt}
-                    key={cmt.id}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <p style={{ textAlign: 'center' }}>Đang tải bình luận...</p>
+              ) : (
+                <>
+                  <form onSubmit={handleCommentInput}>
+                    <div className="cmtGroup">
+                      <SentimentSatisfiedRoundedIcon className='emoji' />
+                      <input
+                        type="text"
+                        id="commentInput"
+                        required
+                        placeholder='Add a comment...'
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        value={commentInput}
+                      />
+                      <button type='submit'>
+                        <SendRoundedIcon className='send' />
+                      </button>
+                    </div>
+                  </form>
+                  <div className="sticky">
+                    {comments.map((cmt) => (
+                      <Comments
+                        className="classComment"
+                        cmt={cmt}
+                        key={cmt.id}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

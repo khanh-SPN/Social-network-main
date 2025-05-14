@@ -1,46 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PlayCircleFilledOutlinedIcon from '@mui/icons-material/PlayCircleFilledOutlined';
 import KeyboardVoiceRoundedIcon from '@mui/icons-material/KeyboardVoiceRounded';
 import { FaSmile } from 'react-icons/fa';
-import { createPost } from '../../../api'; // Sửa đường dẫn: từ src/Components/Profile/ProfileComponents/ lên src/
+import { createPost, getUserProfile } from '../../../api';
+import { AuthContext } from '../../../index';
 
-const ProfileInputPost = ({
-  handleSubmit,
-  setBody,
-  body,
-  images,
-  setImages,
-  profileImg,
-  modelDetails,
-  onPostCreated,
-}) => {
+const ProfileInputPost = ({ setBody, body, images, setImages, onPostCreated }) => {
+  const { userId } = useContext(AuthContext);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProfile(userId);
+        setUser(response);
+      } catch (error) {
+        setError(error.response?.data?.msg || 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) fetchUser();
+  }, [userId]);
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const postData = {
-        content: body,
-        image: images,
-      };
-      await createPost(postData);
+      const formData = new FormData();
+      formData.append('content', body);
+      if (images) formData.append('image', images);
+      await createPost(formData);
       setBody('');
       setImages(null);
       onPostCreated();
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to create post');
+    } catch (error) {
+      setError(error.response?.data?.msg || 'Failed to create post');
     }
   };
 
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Đang tải...</div>;
+
   return (
     <div className="i-form">
+      {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       <form onSubmit={handleFormSubmit}>
         <div className="i-input-box">
-          <img src={profileImg} className='i-img' alt={`${modelDetails.ModelName}'s profile picture`} />
+          <img src={user?.profilePicture || '/default-profile.jpg'} className='i-img' alt={`${user?.username}'s profile picture`} />
           <input
             type="text"
             id="i-input"
-            placeholder={`What's in your mind ${modelDetails.ModelName}?`}
+            placeholder={`What's in your mind ${user?.username || 'User'}?`}
             required
             value={body}
             onChange={(e) => setBody(e.target.value)}

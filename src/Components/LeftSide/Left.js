@@ -1,22 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../LeftSide/Left.css';
 import { AiOutlineHome, AiOutlineSearch } from 'react-icons/ai';
 import { FiTrendingUp } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BsBookmark } from 'react-icons/bs';
 import { RiFileListLine } from 'react-icons/ri';
 import { FiSettings } from 'react-icons/fi';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import Profile from '../../assets/profile.jpg';
+import { getUserProfile } from '../../api';
+import { AuthContext } from '../../index';
 
-const Left = ({ profileImg, modelDetails }) => {
+const Left = () => {
+  const { userId } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [btnActive, setBtnActive] = useState('#');
   const [logOutExit, setLogOutExit] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProfile(userId);
+        setUser(response);
+      } catch (error) {
+        console.error(error.response?.data?.msg || 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) fetchUser();
+  }, [userId]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/';
+    localStorage.removeItem('userId');
+    navigate('/');
   };
+
+  if (loading) return <div style={{ padding: '20px' }}>Đang tải...</div>;
 
   return (
     <div className="L-features">
@@ -51,10 +74,10 @@ const Left = ({ profileImg, modelDetails }) => {
       <div className="left-user">
         <Link to="/profile" style={{ textDecoration: 'none', color: 'black' }}>
           <div className="user-name-userid">
-            <img src={profileImg ? profileImg : Profile} alt="Profile picture" />
+            <img src={user?.profilePicture || '/default-profile.jpg'} alt="Profile picture" />
             <div className='L-user'>
-              <h1>{modelDetails ? modelDetails.ModelName : 'Vijay'}</h1>
-              <span>{modelDetails ? modelDetails.ModelUserName : '@vijay98'}</span>
+              <h1>{user?.username || 'User'}</h1>
+              <span>{user?.profileTag || '@user'}</span>
             </div>
           </div>
         </Link>
@@ -62,7 +85,7 @@ const Left = ({ profileImg, modelDetails }) => {
         {logOutExit && (
           <div className="logOutExitContainer">
             <button>Add an existing account</button>
-            <button onClick={handleLogout}>Log out {modelDetails ? modelDetails.ModelUserName : '@vijay98'}</button>
+            <button onClick={handleLogout}>Log out {user?.profileTag || '@user'}</button>
           </div>
         )}
       </div>

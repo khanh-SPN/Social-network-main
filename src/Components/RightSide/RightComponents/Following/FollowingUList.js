@@ -1,23 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { followUser, unfollowUser } from '../../../../api';
+import { AuthContext } from '../../../../index';
 
 const FollowingUList = ({ data, following, setFollowing }) => {
+  const { userId } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followText, setFollowText] = useState('Theo dõi');
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        setUserId(decoded.id);
-      } catch (err) {
-        setError('Token không hợp lệ');
-      }
-    }
-  }, []);
 
   const handleFollow = async () => {
     if (!userId) {
@@ -32,15 +21,15 @@ const FollowingUList = ({ data, following, setFollowing }) => {
         setFollowText('Theo dõi');
         setIsFollowing(false);
       } else {
-        const { data: response } = await followUser(data.id);
+        const response = await followUser(data.id);
         if (response.followed) {
           setFollowing(following + 1);
           setFollowText('Đang theo dõi');
           setIsFollowing(true);
         }
       }
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Không thể theo dõi/bỏ theo dõi');
+    } catch (error) {
+      setError(error.response?.data?.msg || 'Không thể theo dõi/bỏ theo dõi');
     }
   };
 
@@ -48,10 +37,10 @@ const FollowingUList = ({ data, following, setFollowing }) => {
     <div className="following-people">
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       <div className="following-details">
-        <img src={data.profilePicture || data.img} alt={`${data.name || data.username}'s profile picture`} />
+        <img src={data.profilePicture || '/default-profile.jpg'} alt={`${data.username}'s profile picture`} />
         <div className="following-name-username">
-          <h3>{data.name || data.username}</h3>
-          <p>{data.profileTag || data.username}</p>
+          <h3>{data.username}</h3>
+          <p>{data.profileTag}</p>
         </div>
       </div>
       <button

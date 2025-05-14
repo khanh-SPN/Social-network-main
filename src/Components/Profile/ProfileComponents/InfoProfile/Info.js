@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import '../InfoProfile/Info.css';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
@@ -6,90 +6,95 @@ import WorkOutlineRoundedIcon from '@mui/icons-material/WorkOutlineRounded';
 import { LiaEdit } from 'react-icons/lia';
 import { IoCameraOutline } from 'react-icons/io5';
 import { BiLogOut } from 'react-icons/bi';
-import { useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import ModelProfile from '../ModelProfile/ModelProfile';
-import { Link } from 'react-router-dom';
-import { updateUser } from '../../../../api';
+import { getUserProfile, updateUserProfile } from '../../../../api';
+import { AuthContext } from '../../../../index';
 
-const Info = ({
-  userPostData,
-  following,
-  modelDetails,
-  setModelDetails,
-  profileImg,
-  setProfileImg,
-  coverImg,
-  setCoverImg,
-  name,
-  setName,
-  userName,
-  setUserName,
-}) => {
+const Info = () => {
+  const { userId } = useContext(AuthContext);
+  const navigate = useNavigate();
   const importProfile = useRef();
   const importCover = useRef();
+  const [user, setUser] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
+  const [name, setName] = useState('');
+  const [userName, setUserName] = useState('');
   const [countryName, setCountryName] = useState('');
   const [jobName, setJobName] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleFile1 = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setProfileImg(URL.createObjectURL(file));
-      handleUpdateProfile({ profilePicture: file });
-    }
-  };
-
-  const handleFile2 = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setCoverImg(URL.createObjectURL(file));
-      handleUpdateProfile({ coverPicture: file });
-    }
-  };
-
-  const handleUpdateProfile = async (updateData) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No token found');
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      const userId = decoded.id;
-      await updateUser(userId, updateData);
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to update profile');
-    }
-  };
-
-  const handleModel = (e) => {
-    e.preventDefault();
-    const ModelName = name;
-    const ModelUserName = userName;
-    const ModelCountryName = countryName || modelDetails.ModelCountryName;
-    const ModelJobName = jobName || modelDetails.ModelJobName;
-
-    const obj = {
-      ModelName,
-      ModelUserName,
-      ModelCountryName,
-      ModelJobName,
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProfile(userId);
+        setUser(response);
+        setName(response.bio || '');
+        setUserName(response.profileTag || '');
+        setCountryName(response.countryName || '');
+        setJobName(response.jobName || '');
+      } catch (error) {
+        setError(error.response?.data?.msg || 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
     };
+    if (userId) fetchUser();
+  }, [userId]);
 
-    setModelDetails(obj);
+  const handleFile1 = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      await handleUpdateProfile(formData);
+    }
+  };
+
+  const handleFile2 = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('coverPicture', file);
+      await handleUpdateProfile(formData);
+    }
+  };
+
+  const handleUpdateProfile = async (formData) => {
+    try {
+      const response = await updateUserProfile(userId, formData);
+      setUser(response);
+    } catch (error) {
+      setError(error.response?.data?.msg || 'Failed to update profile');
+    }
+  };
+
+  const handleModel = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    if (name) formData.append('bio', name);
+    if (countryName) formData.append('countryName', countryName);
+    if (jobName) formData.append('jobName', jobName);
+    await handleUpdateProfile(formData);
     setOpenEdit(false);
-    handleUpdateProfile({ bio: ModelName });
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/';
+    localStorage.removeItem('userId');
+    navigate('/');
   };
+
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Đang tải...</div>;
 
   return (
     <div className='info'>
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       <div className="info-cover">
-        <img src={coverImg} alt="Cover" />
-        <img src={profileImg} alt="Profile" />
+        <img src={user?.coverPicture || '/default-cover.jpg'} alt="Cover" />
+        <img src={user?.profilePicture || '/default-profile.jpg'} alt="Profile" />
         <div className='coverDiv'><IoCameraOutline className='coverSvg' onClick={() => importCover.current.click()} /></div>
         <div className='profileDiv'><IoCameraOutline className='profileSvg' onClick={() => importProfile.current.click()} /></div>
       </div>
@@ -99,17 +104,19 @@ const Info = ({
         ref={importProfile}
         onChange={handleFile1}
         style={{ display: 'none' }}
+        accept=".png,.jpeg,.jpg"
       />
       <input
         type="file"
         ref={importCover}
         onChange={handleFile2}
         style={{ display: 'none' }}
+        accept=".png,.jpeg,.jpg"
       />
 
       <div className="info-follow">
-        <h1>{modelDetails.ModelName}</h1>
-        <p>{modelDetails.ModelUserName}</p>
+        <h1>{user?.username}</h1>
+        <p>{user?.profileTag}</p>
 
         <Link to="/" className='logout' onClick={handleLogout}>
           <BiLogOut />Logout
@@ -134,28 +141,28 @@ const Info = ({
           <div className="info-col-1">
             <div className="info-details-list">
               <LocationOnOutlinedIcon />
-              <span>{modelDetails.ModelCountryName}</span>
+              <span>{user?.countryName || 'Unknown'}</span>
             </div>
             <div className="info-details-list">
               <WorkOutlineRoundedIcon />
-              <span>{modelDetails.ModelJobName}</span>
+              <span>{user?.jobName || 'Not specified'}</span>
             </div>
             <div className="info-details-list">
               <CalendarMonthRoundedIcon />
-              <span>Joined in 2023-08-12</span>
+              <span>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}</span>
             </div>
           </div>
           <div className="info-col-2">
             <div>
-              <h2>5,000</h2>
+              <h2>{user?.followers || 0}</h2>
               <span>Followers</span>
             </div>
             <div>
-              <h2>{userPostData.length}</h2>
+              <h2>{user?.posts || 0}</h2>
               <span>Posts</span>
             </div>
             <div>
-              <h2>{following}</h2>
+              <h2>{user?.following || 0}</h2>
               <span>Following</span>
             </div>
           </div>
@@ -165,4 +172,4 @@ const Info = ({
   );
 };
 
-export default Info;  
+export default Info;

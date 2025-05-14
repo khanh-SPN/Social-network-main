@@ -1,55 +1,84 @@
 import axios from 'axios';
 
-const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+const api = axios.create({
+  baseURL: 'http://localhost:5000',
 });
 
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// Thêm token vào header nếu có
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-// Authentication
-export const signup = (data) => API.post('/auth/signup', data);
-export const login = (data) => API.post('/auth/login', data);
+// API functions
+export const signup = (data) =>
+  api.post('/api/auth/signup', data).then((res) => res.data);
 
-// Users
-export const getUser = (id) => API.get(`/users/${id}`);
-export const updateUser = (id, data) => {
-  const formData = new FormData();
-  if (data.bio) formData.append('bio', data.bio);
-  if (data.profilePicture) formData.append('profilePicture', data.profilePicture);
-  if (data.coverPicture) formData.append('coverPicture', data.coverPicture);
-  return API.put(`/users/${id}`, formData);
-};
-export const followUser = (id) => API.post(`/users/${id}/follow`);
-export const unfollowUser = (id) => API.post(`/users/${id}/unfollow`);
-export const searchUsers = (tag) => API.get(`/users/search?tag=${tag}`);
-export const getSuggestions = () => API.get('/users/suggestions');
-export const getFollowing = (id) => API.get(`/users/${id}/following`);
-export const getFollowers = (id) => API.get(`/users/${id}/followers`);
+export const login = (data) =>
+  api.post('/api/auth/login', data).then((res) => res.data);
 
-// Posts
-export const createPost = (data) => {
-  const formData = new FormData();
-  if (data.content) formData.append('content', data.content);
-  if (data.image) formData.append('image', data.image);
-  return API.post('/posts', formData);
-};
-export const getPosts = (page = 1, limit = 10) => API.get(`/posts?page=${page}&limit=${limit}`);
-export const deletePost = (id) => API.delete(`/posts/${id}`);
-export const likePost = (id) => API.post(`/posts/${id}/like`);
-export const commentPost = (id, content) => API.post(`/posts/${id}/comment`, { content });
-export const recommendPost = (id) => API.post(`/posts/${id}/recommend`);
+export const getUserProfile = (id) =>
+  api.get(`/api/users/${id}`).then((res) => res.data);
 
-// Notifications
-export const getNotifications = (page = 1, limit = 10) => API.get(`/notifications?page=${page}&limit=${limit}`);
-export const markAsRead = (id) => API.put(`/notifications/${id}/read`);
+export const updateUserProfile = (id, data) =>
+  api.put(`/api/users/${id}`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((res) => res.data);
 
-export default API;
+export const followUser = (id) =>
+  api.post(`/api/users/${id}/follow`).then((res) => res.data);
+
+export const unfollowUser = (id) =>
+  api.post(`/api/users/${id}/unfollow`).then((res) => res.data);
+
+export const searchUsers = (tag) =>
+  api.get(`/api/users/search?tag=${tag}`).then((res) => res.data);
+
+export const getSuggestions = () =>
+  api.get('/api/users/suggestions').then((res) => res.data);
+
+export const getFollowing = (id) =>
+  api.get(`/api/users/${id}/following`).then((res) => res.data);
+
+export const getFollowers = (id) =>
+  api.get(`/api/users/${id}/followers`).then((res) => res.data);
+
+export const createPost = (data) =>
+  api.post('/api/posts', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((res) => res.data);
+
+export const getPosts = (page = 1, limit = 10) =>
+  api.get(`/api/posts?page=${page}&limit=${limit}`).then((res) => res.data);
+
+export const deletePost = (id) =>
+  api.delete(`/api/posts/${id}`).then((res) => res.data);
+
+export const likePost = (id) =>
+  api.post(`/api/posts/${id}/like`).then((res) => res.data);
+
+export const getPostLikes = (id, page = 1, limit = 10) =>
+  api.get(`/api/posts/${id}/likes?page=${page}&limit=${limit}`).then((res) => res.data);
+
+export const getComments = (id, page = 1, limit = 10) =>
+  api.get(`/api/posts/${id}/comments?page=${page}&limit=${limit}`).then((res) => res.data);
+
+export const addComment = (id, data) =>
+  api.post(`/api/posts/${id}/comment`, data).then((res) => res.data);
+
+export const recommendPost = (id) =>
+  api.post(`/api/posts/${id}/recommend`).then((res) => res.data);
+
+export const getNotifications = (page = 1, limit = 10) =>
+  api.get(`/api/notifications?page=${page}&limit=${limit}`).then((res) => res.data);
+
+export const markNotificationRead = (id) =>
+  api.put(`/api/notifications/${id}/read`).then((res) => res.data);
+
+export const likeComment = (id) =>
+  api.post(`/api/comments/${id}/like`).then((res) => res.data);
+
+export default api;

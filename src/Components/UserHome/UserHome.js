@@ -1,33 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import FeedUser from './FeedUser';
-import { getPosts } from '../../api'; // Sửa đường dẫn: từ src/Components/UserHome/ lên src/
+import { getPosts, getUserProfile } from '../../api';
+import { AuthContext } from '../../index';
 
-const UserHome = ({ setUserPostData, userPostData, profileImg, modelDetails, images }) => {
+const UserHome = () => {
+  const { userId } = useContext(AuthContext);
+  const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await getPosts(page);
-        setUserPostData(data.posts);
-        setTotalPages(data.totalPages);
-      } catch (err) {
-        console.error(err.response?.data?.msg || 'Failed to load user posts');
+        setLoading(true);
+        const [postsResponse, userResponse] = await Promise.all([
+          getPosts(page, 10),
+          getUserProfile(userId)
+        ]);
+        setPosts(postsResponse.posts.filter(post => post.userId === parseInt(userId)));
+        setTotalPages(postsResponse.totalPages);
+        setUser(userResponse);
+      } catch (error) {
+        setError(error.response?.data?.msg || 'Failed to load data');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUserPosts();
-  }, [page, setUserPostData]);
+    if (userId) fetchData();
+  }, [userId, page]);
 
   return (
     <div>
-      {userPostData.length ? (
+      {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+      {loading ? (
+        <p style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</p>
+      ) : posts.length ? (
         <FeedUser
-          modelDetails={modelDetails}
-          profileImg={profileImg}
-          posts={userPostData}
-          setPosts={setUserPostData}
-          images={images}
+          user={user}
+          posts={posts}
+          setPosts={setPosts}
         />
       ) : (
         <p style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -39,14 +53,14 @@ const UserHome = ({ setUserPostData, userPostData, profileImg, modelDetails, ima
           <button
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            style={{ padding: '10px 20px', marginRight: '10px' }}
+            style={{ padding: '10px 20px', marginRight: '10px', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
           >
             Previous
           </button>
           <button
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
-            style={{ padding: '10px 20px' }}
+            style={{ padding: '10px 20px', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
           >
             Next
           </button>

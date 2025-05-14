@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../Home/Post.css';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
@@ -19,68 +19,63 @@ import { AiFillYoutube } from 'react-icons/ai';
 import { RxTwitterLogo } from 'react-icons/rx';
 import { FiGithub } from 'react-icons/fi';
 import Comments from '../Comments/Comments';
-import { likePost, commentPost, recommendPost, deletePost } from '../../api'; // Đường dẫn đúng: từ src/Components/UserHome/ lên src/
+import { likePost, addComment, recommendPost, deletePost, getComments } from '../../api';
+import { AuthContext } from '../../index';
 
-const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) => {
-  const [comments, setComments] = useState(post.comments || []);
-  const [like, setLike] = useState(post.like || 0);
-  const [unlike, setUnlike] = useState(false);
-  const [filledLike, setFilledLike] = useState(<FavoriteBorderOutlinedIcon />);
-  const [unFilledLike, setUnFilledLike] = useState(false);
+const PostUser = ({ posts, post, setPosts, user }) => {
+  const { userId } = useContext(AuthContext);
+  const [comments, setComments] = useState([]);
+  const [like, setLike] = useState(post.likes || 0);
+  const [liked, setLiked] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [socialIcons, setSocialIcons] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      setUserId(decoded.id);
-    }
-  }, []);
+    const fetchComments = async () => {
+      try {
+        setLoading(true);
+        const response = await getComments(post.id);
+        setComments(response.comments);
+      } catch (error) {
+        console.error(error.response?.data?.msg || 'Failed to fetch comments');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComments();
+  }, [post.id]);
 
   const handleLikes = async () => {
     try {
-      await likePost(post.id);
-      setLike(unlike ? like - 1 : like + 1);
-      setUnlike(!unlike);
-      setFilledLike(unFilledLike ? <FavoriteBorderOutlinedIcon /> : <FavoriteRoundedIcon />);
-      setUnFilledLike(!unFilledLike);
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to like post');
+      const response = await likePost(post.id);
+      setLike(response.likes);
+      setLiked(response.liked);
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to like post');
     }
   };
 
   const handleDelete = async () => {
     try {
       await deletePost(post.id);
-      const updatedPosts = posts.filter(val => val.id !== post.id);
-      setPosts(updatedPosts);
+      setPosts(posts.filter(val => val.id !== post.id));
       setShowDelete(false);
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to delete post');
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to delete post');
     }
   };
 
   const handleCommentInput = async (e) => {
     e.preventDefault();
     try {
-      await commentPost(post.id, commentInput);
-      const newComment = {
-        id: Date.now(),
-        userId: userId,
-        username: modelDetails.ModelName,
-        content: commentInput,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        userProfilePicture: profileImg,
-      };
-      setComments([...comments, newComment]);
+      const response = await addComment(post.id, { content: commentInput });
+      setComments([...comments, response]);
       setCommentInput('');
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to comment');
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to comment');
     }
   };
 
@@ -88,8 +83,8 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
     try {
       await recommendPost(post.id);
       alert('Bài viết được đề xuất thành công!');
-    } catch (err) {
-      console.error(err.response?.data?.msg || 'Failed to recommend post');
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to recommend post');
     }
   };
 
@@ -97,9 +92,9 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
     <div className='post'>
       <div className='post-header'>
         <div className='post-user' style={{ cursor: 'pointer' }}>
-          <img src={profileImg} className='p-img' alt={`${modelDetails.ModelName}'s profile picture`} />
-          <h2>{modelDetails.ModelName}</h2>
-          <p className='datePara'>{post.createdAt ? new Date(post.createdAt).toLocaleString() : post.datetime}</p>
+          <img src={user?.profilePicture || '/default-profile.jpg'} className='p-img' alt={`${user?.username}'s profile picture`} />
+          <h2>{user?.username}</h2>
+          <p className='datePara'>{new Date(post.createdAt).toLocaleString()}</p>
         </div>
         <div className='delete'>
           {showDelete && (
@@ -107,7 +102,7 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
               <button><PiSmileySad />Không quan tâm bài viết này</button>
               <button><IoVolumeMuteOutline />Tắt tiếng người dùng này</button>
               <button><MdBlockFlipped />Chặn người dùng này</button>
-              {post.userId === userId && (
+              {post.userId === parseInt(userId) && (
                 <button onClick={handleDelete}><AiOutlineDelete />Xóa</button>
               )}
               <button><MdReportGmailerrorred />Báo cáo bài viết</button>
@@ -117,9 +112,9 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
         </div>
       </div>
       <p className='body'>
-        {(post.content || post.body).length <= 300
-          ? post.content || post.body
-          : `${(post.content || post.body).slice(0, 300)}...`}
+        {post.content?.length <= 300
+          ? post.content
+          : `${post.content.slice(0, 300)}...`}
       </p>
       {post.image && (
         <img src={`http://localhost:5000${post.image}`} alt="Hình ảnh bài viết" className="post-img" />
@@ -132,7 +127,7 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
               onClick={handleLikes}
               style={{ marginTop: '5px' }}
             >
-              {filledLike}
+              {liked ? <FavoriteRoundedIcon /> : <FavoriteBorderOutlinedIcon />}
             </p>
             <MessageRoundedIcon
               onClick={() => setShowComment(!showComment)}
@@ -186,32 +181,36 @@ const PostUser = ({ posts, post, setPosts, profileImg, modelDetails, images }) =
           </div>
           {showComment && (
             <div className="commentSection">
-              <form onSubmit={handleCommentInput}>
-                <div className="cmtGroup">
-                  <SentimentSatisfiedRoundedIcon className='emoji' />
-                  <input
-                    type="text"
-                    id="commentInput"
-                    required
-                    placeholder='Thêm bình luận...'
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    value={commentInput}
-                  />
-                  <button type='submit'>
-                    <SendRoundedIcon className='send' />
-                  </button>
-                </div>
-              </form>
-              <div className="sticky">
-                {comments.map((cmt) => (
-                  <Comments
-                    modelDetails={modelDetails}
-                    className="classComment"
-                    cmt={cmt}
-                    key={cmt.id}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <p style={{ textAlign: 'center' }}>Đang tải bình luận...</p>
+              ) : (
+                <>
+                  <form onSubmit={handleCommentInput}>
+                    <div className="cmtGroup">
+                      <SentimentSatisfiedRoundedIcon className='emoji' />
+                      <input
+                        type="text"
+                        id="commentInput"
+                        required
+                        placeholder='Thêm bình luận...'
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        value={commentInput}
+                      />
+                      <button type='submit'>
+                        <SendRoundedIcon className='send' />
+                      </button>
+                    </div>
+                  </form>
+                  <div className="sticky">
+                    {comments.map((cmt) => (
+                      <Comments
+                        cmt={cmt}
+                        key={cmt.id}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

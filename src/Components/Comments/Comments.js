@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import '../Comments/Comments.css';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import { likeComment } from '../../api';
+import { AuthContext } from '../../index';
 
 const Comments = ({ cmt }) => {
-  const [booleonLike, setBooleonLike] = useState(false);
+  const { userId } = useContext(AuthContext);
+  const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(cmt.likes || 0);
 
-  const handleLike = () => {
-    setBooleonLike(!booleonLike);
-    setLikeCount(booleonLike ? likeCount - 1 : likeCount + 1);
+  const handleLike = async () => {
+    try {
+      const response = await likeComment(cmt.id);
+      setLiked(response.liked);
+      setLikeCount(response.likes);
+    } catch (error) {
+      console.error(error.response?.data?.msg || 'Failed to like comment');
+    }
   };
 
   return (
@@ -18,15 +26,15 @@ const Comments = ({ cmt }) => {
         <div className='commentList1'>
           <div className="commentHead">
             <div>
-              <img src={cmt.profilePic || cmt.userProfilePicture} alt={`${cmt.username}'s profile picture`} />
+              <img src={cmt.profilePicture || '/default-profile.jpg'} alt={`${cmt.username}'s profile picture`} />
             </div>
             <p>
-              <span>{cmt.username}</span>{cmt.content || cmt.comment}
+              <span>{cmt.username}</span>{cmt.content}
             </p>
           </div>
           <div className="commentFooter">
-            <p>{cmt.time || new Date(cmt.createdAt).toLocaleString()}</p>
-            <h4>{booleonLike ? likeCount + 1 : likeCount} likes</h4>
+            <p>{new Date(cmt.createdAt).toLocaleString()}</p>
+            <h4>{likeCount} likes</h4>
           </div>
         </div>
         <div className="commentList2">
@@ -35,7 +43,7 @@ const Comments = ({ cmt }) => {
             onClick={handleLike}
             style={{ cursor: 'pointer' }}
           >
-            {booleonLike ? <FavoriteRoundedIcon /> : <FavoriteBorderOutlinedIcon />}
+            {liked ? <FavoriteRoundedIcon /> : <FavoriteBorderOutlinedIcon />}
           </p>
         </div>
       </div>
