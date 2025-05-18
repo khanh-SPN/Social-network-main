@@ -2,7 +2,7 @@ export default function validation(data) {
   const error = {};
 
   const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/;
-  const passwordPattern = /^[a-zA-Z0-9!@#\$%\^\&*_=+-]{8,}$/;
+  const passwordPattern = /^[a-zA-Z0-9!@#\$%\^\&*_=+-]{5,}$/;
   const profileTagPattern = /^@[a-zA-Z0-9_]{3,}$/;
 
   if (data.username && data.username === '') {
@@ -18,7 +18,7 @@ export default function validation(data) {
   if (data.password === '') {
     error.password = '* Password is Required';
   } else if (!passwordPattern.test(data.password)) {
-    error.password = '* Password must be at least 8 characters';
+    error.password = '* Password must be at least 5 characters';
   }
 
   if (data.confirmpassword && data.confirmpassword === '') {

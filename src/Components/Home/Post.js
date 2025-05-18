@@ -23,6 +23,8 @@ import { Link } from 'react-router-dom';
 import { likePost, addComment, recommendPost, deletePost, getComments } from '../../api';
 import { AuthContext } from '../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const Post = ({ post, posts, setPosts, setFriendsProfile }) => {
   const { userId } = useContext(AuthContext);
   const [comments, setComments] = useState([]);
@@ -98,7 +100,12 @@ const Post = ({ post, posts, setPosts, setFriendsProfile }) => {
       <div className='post-header'>
         <Link to={`/friendsId?id=${post.userId}`} style={{ textDecoration: 'none' }}>
           <div className='post-user' onClick={handleFriendsId} style={{ cursor: 'pointer' }}>
-            <img src={post.User?.profilePicture || '/default-profile.jpg'} className='p-img' alt={`${post.User?.username}'s profile picture`} />
+            <img
+              src={post.User?.profilePicture ? `${BASE_URL}${post.User.profilePicture}` : '/images/default-profile.jpg'}
+              className='p-img'
+              alt={`${post.User?.username}'s profile picture`}
+              onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+            />
             <h2>{post.User?.username}</h2>
             <p className='datePara'>{new Date(post.createdAt).toLocaleString()}</p>
           </div>

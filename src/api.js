@@ -81,4 +81,14 @@ export const markNotificationRead = (id) =>
 export const likeComment = (id) =>
   api.post(`/api/comments/${id}/like`).then((res) => res.data);
 
+// New APIs for chat functionality
+export const getMessages = (recipientId, page = 1, limit = 20) =>
+  api.get(`/api/messages?recipientId=${recipientId}&page=${page}&limit=${limit}`).then((res) => res.data);
+
+export const sendMessage = (data) =>
+  api.post('/api/messages', data).then((res) => res.data);
+
+export const getConversations = () =>
+  api.get('/api/messages/conversations').then((res) => res.data);
+
 export default api;

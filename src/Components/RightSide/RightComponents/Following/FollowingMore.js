@@ -3,6 +3,8 @@ import { Modal } from '@mantine/core';
 import { getFollowers, followUser } from '../../../../api';
 import { AuthContext } from '../../../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const FollowingMore = ({ showMore, setShowMore }) => {
   const { userId } = useContext(AuthContext);
   const [followers, setFollowers] = useState([]);
@@ -61,7 +63,11 @@ const FollowingMore = ({ showMore, setShowMore }) => {
         followers.map((user) => (
           <div key={user.id} style={{ marginTop: '20px' }} className="following-people">
             <div className="following-details">
-              <img src={user.profilePicture || '/default-profile.jpg'} alt={`${user.username}'s profile picture`} />
+              <img
+                src={user.profilePicture ? `${BASE_URL}${user.profilePicture}` : '/images/default-profile.jpg'}
+                alt={`${user.username}'s profile picture`}
+                onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+              />
               <div className="following-name-username">
                 <h3>{user.username}</h3>
                 <p>{user.profileTag}</p>

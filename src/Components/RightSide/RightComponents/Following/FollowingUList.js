@@ -2,6 +2,8 @@ import React, { useState, useContext } from 'react';
 import { followUser, unfollowUser } from '../../../../api';
 import { AuthContext } from '../../../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const FollowingUList = ({ data, following, setFollowing }) => {
   const { userId } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -37,7 +39,11 @@ const FollowingUList = ({ data, following, setFollowing }) => {
     <div className="following-people">
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       <div className="following-details">
-        <img src={data.profilePicture || '/default-profile.jpg'} alt={`${data.username}'s profile picture`} />
+        <img
+          src={data.profilePicture ? `${BASE_URL}${data.profilePicture}` : '/images/default-profile.jpg'}
+          alt={`${data.username}'s profile picture`}
+          onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+        />
         <div className="following-name-username">
           <h3>{data.username}</h3>
           <p>{data.profileTag}</p>

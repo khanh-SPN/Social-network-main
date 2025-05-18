@@ -7,6 +7,7 @@ import FriendsId from './Pages/FriendsId/FriendsId';
 import Notification from './Pages/Notification/Notification';
 import Login from './Pages/RegisterPage/Login';
 import SignUp from './Pages/RegisterPage/SignUp';
+import ChatPage from './Pages/Chat/ChatPage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useContext(AuthContext);
@@ -54,6 +55,9 @@ const App = () => {
           </Link>
           <Link to="/friendsId" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
             Friends
+          </Link>
+          <Link to="/chat" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
+            Chat
           </Link>
           <button
             onClick={handleLogout}
@@ -103,6 +107,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Notification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
             </ProtectedRoute>
           }
         />

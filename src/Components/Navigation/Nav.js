@@ -65,7 +65,9 @@ const Nav = ({ search, setSearch, setShowMenu }) => {
           <IoNotificationsOutline className='nav-icons' />
           <span>5</span>
         </Link>
-        <TbMessage className='nav-icons' />
+        <Link to="/chat" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', color: 'white' }}>
+          <TbMessage className='nav-icons' />
+        </Link>
         <LiaUserFriendsSolid
           className='nav-icons'
           onClick={() => setShowMenu(true)}
@@ -89,10 +91,10 @@ const Nav = ({ search, setSearch, setShowMenu }) => {
       <div className="n-profile">
         <Link to="/profile">
           <img
-            src={user?.profilePicture || '/default-profile.jpg'}
+            src={user?.profilePicture ? `http://localhost:5000${user.profilePicture}` : '/images/default-profile.jpg'}
             className='n-img'
-            style={{ marginBottom: '-7px' }}
             alt="Profile picture"
+            onError={(e) => (e.target.src = '/images/default-profile.jpg')}
           />
         </Link>
       </div>

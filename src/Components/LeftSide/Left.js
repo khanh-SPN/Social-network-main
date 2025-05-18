@@ -10,6 +10,8 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { getUserProfile } from '../../api';
 import { AuthContext } from '../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const Left = () => {
   const { userId } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -74,7 +76,12 @@ const Left = () => {
       <div className="left-user">
         <Link to="/profile" style={{ textDecoration: 'none', color: 'black' }}>
           <div className="user-name-userid">
-            <img src={user?.profilePicture || '/default-profile.jpg'} alt="Profile picture" />
+            <img
+              src={user?.profilePicture ? `${BASE_URL}${user.profilePicture}` : '/images/default-profile.jpg'}
+              alt="Profile picture"
+              className="left-profile-img"
+              onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+            />
             <div className='L-user'>
               <h1>{user?.username || 'User'}</h1>
               <span>{user?.profileTag || '@user'}</span>

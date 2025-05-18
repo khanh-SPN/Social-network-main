@@ -11,6 +11,8 @@ import ModelProfile from '../ModelProfile/ModelProfile';
 import { getUserProfile, updateUserProfile } from '../../../../api';
 import { AuthContext } from '../../../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const Info = () => {
   const { userId } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ const Info = () => {
         setUserName(response.profileTag || '');
         setCountryName(response.countryName || '');
         setJobName(response.jobName || '');
+        console.log('Profile Picture URL:', response.profilePicture); // Debug
       } catch (error) {
         setError(error.response?.data?.msg || 'Failed to fetch user');
       } finally {
@@ -66,6 +69,8 @@ const Info = () => {
     try {
       const response = await updateUserProfile(userId, formData);
       setUser(response);
+      setError('');
+      console.log('Updated profile:', response); // Debug
     } catch (error) {
       setError(error.response?.data?.msg || 'Failed to update profile');
     }
@@ -90,13 +95,25 @@ const Info = () => {
   if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Đang tải...</div>;
 
   return (
-    <div className='info'>
+    <div className="info">
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       <div className="info-cover">
-        <img src={user?.coverPicture || '/default-cover.jpg'} alt="Cover" />
-        <img src={user?.profilePicture || '/default-profile.jpg'} alt="Profile" />
-        <div className='coverDiv'><IoCameraOutline className='coverSvg' onClick={() => importCover.current.click()} /></div>
-        <div className='profileDiv'><IoCameraOutline className='profileSvg' onClick={() => importProfile.current.click()} /></div>
+        <img
+          src={user?.coverPicture ? `${BASE_URL}${user.coverPicture}` : '/images/default-cover.jpg'}
+          alt="Cover"
+          onError={(e) => (e.target.src = '/images/default-cover.jpg')}
+        />
+        <img
+          src={user?.profilePicture ? `${BASE_URL}${user.profilePicture}` : '/images/default-profile.jpg'}
+          alt="Profile"
+          onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+        />
+        <div className="coverDiv">
+          <IoCameraOutline className="coverSvg" onClick={() => importCover.current.click()} />
+        </div>
+        <div className="profileDiv">
+          <IoCameraOutline className="profileSvg" onClick={() => importProfile.current.click()} />
+        </div>
       </div>
 
       <input
@@ -118,11 +135,13 @@ const Info = () => {
         <h1>{user?.username}</h1>
         <p>{user?.profileTag}</p>
 
-        <Link to="/" className='logout' onClick={handleLogout}>
-          <BiLogOut />Logout
+        <Link to="/" className="logout" onClick={handleLogout}>
+          <BiLogOut /> Logout
         </Link>
 
-        <button onClick={() => setOpenEdit(true)}><LiaEdit />Edit Profile</button>
+        <button onClick={() => setOpenEdit(true)}>
+          <LiaEdit /> Edit Profile
+        </button>
         <ModelProfile
           name={name}
           setName={setName}
