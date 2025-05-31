@@ -16,12 +16,15 @@ const ChatWindow = ({ selectedUser, currentUserId }) => {
     const fetchMessages = async () => {
       try {
         setLoading(true);
+        if (!selectedUser?.id) {
+          throw new Error('Không có người dùng được chọn');
+        }
         const response = await getMessages(selectedUser.id);
         console.log('Fetched messages:', response);
-        setMessages(response.messages);
+        setMessages(response.messages || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
-        setError(error.response?.data?.msg || 'Không thể tải tin nhắn');
+        setError(error.response?.data?.msg || error.message || 'Không thể tải tin nhắn');
       } finally {
         setLoading(false);
       }
@@ -50,6 +53,10 @@ const ChatWindow = ({ selectedUser, currentUserId }) => {
       setError(error.response?.data?.msg || 'Không thể gửi tin nhắn');
     }
   };
+
+  if (!selectedUser) {
+    return <div className="chat-placeholder">Chọn một cuộc trò chuyện để bắt đầu</div>;
+  }
 
   return (
     <div className="chat-window">

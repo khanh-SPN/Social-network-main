@@ -1,152 +1,91 @@
-/* Tổng thể */
-.noti-overall {
-  padding: 0 15px;
-  background: #fafafa; /* Nền nhẹ, hiện đại */
-  min-height: 100vh;
-}
-
-/* Nhóm thông báo */
-.notification-group {
-  max-width: 900px;
-  margin: 30px auto;
-  padding: 15px;
+.notification-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Bóng nhẹ, chuyên nghiệp */
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Tiêu đề */
-.notification-group h1 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 20px;
-  text-transform: capitalize;
-}
-
-/* Icon điều hướng */
-.noti-div {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  background: #007bff; /* Màu xanh chính của Face Gram */
-  color: #ffffff;
-  border: 1px solid #007bff;
-  margin: 10px 0 0 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.noti-div:hover {
-  background: #0056b3; /* Màu xanh đậm khi hover */
-  border-color: #0056b3;
-  transform: scale(1.05); /* Phóng to nhẹ */
-}
-
-.noti-div:active {
-  transform: scale(0.95); /* Thu nhỏ khi nhấn */
-}
-
-.noti-Home-Icon {
-  font-size: 24px;
-}
-
-/* Phần điều hướng */
-.nav-section {
+.notification-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-}
-
-.nav-section img {
-  width: 36px; /* Avatar nhỏ gọn */
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center;
-  margin: 10px 15px 0 0;
-  border: 1px solid #e0e0e0; /* Viền mỏng, tinh tế */
-}
-
-/* Khu vực thông báo */
-.notification-section {
-  width: 100%;
-  margin-top: 15px;
-  background: #ffffff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06); /* Bóng nhẹ */
-}
-
-/* Tin nhắn thông báo */
-.notification-msg {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   margin-bottom: 20px;
-  padding: 12px;
-  border-radius: 8px;
+}
+
+.notification-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.mark-all-read-btn {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
   transition: background 0.2s ease;
 }
 
-.notification-msg:hover {
-  background: #f5faff; /* Nền xanh nhạt khi hover */
+.mark-all-read-btn:hover {
+  background: #0056b3;
 }
 
-.notification-msg .avatar-img {
-  width: 36px; /* Avatar nhỏ gọn */
-  height: 36px;
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.notification-item:hover {
+  background: #e6f0ff;
+  transform: translateY(-2px);
+}
+
+.notification-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  object-position: center;
-  border: 1px solid #e0e0e0; /* Viền mỏng */
-  cursor: pointer;
-  transition: transform 0.2s ease;
+  border: 1px solid #e0e0e0;
 }
 
-.notification-msg .avatar-img:hover {
-  transform: scale(1.1); /* Phóng to nhẹ khi hover */
+.notification-content {
+  flex: 1;
 }
 
-.notification-msg p {
+.notification-text {
   font-size: 15px;
   color: #2a2a2a;
   margin: 0;
   line-height: 1.5;
 }
 
-.notification-msg span {
-  color: #007bff; /* Màu xanh chính */
-  font-size: 16px;
-  text-transform: lowercase;
-  cursor: pointer;
+.notification-text strong {
+  color: #007bff;
   font-weight: 600;
 }
 
 .post-content {
   font-size: 14px;
   color: #555;
-  margin-top: 5px;
-}
-
-.notification-msg .post-preview-img {
-  max-width: 80px;
-  max-height: 80px;
-  border-radius: 6px;
-  margin-top: 8px;
-  object-fit: cover;
-  border: 1px solid #eee; /* Viền nhẹ cho ảnh bài viết */
-  transition: transform 0.2s ease;
-}
-
-.notification-msg .post-preview-img:hover {
-  transform: scale(1.05); /* Phóng to nhẹ khi hover */
+  margin: 5px 0 0;
 }
 
 .notification-time {
@@ -156,85 +95,80 @@
   display: block;
 }
 
-small {
-  color: #777;
-  font-size: 13px;
-  line-height: 1.5;
+.notification-status {
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+  color: #666;
 }
 
-/* Responsive cho màn hình nhỏ */
-@media screen and (max-width: 430px) {
-  .noti-overall {
-    padding: 0 10px;
-  }
+.notification-error {
+  color: #dc3545;
+}
 
-  .notification-group {
-    margin: 20px auto;
-    padding: 10px;
-    box-shadow: none; /* Bỏ bóng trên mobile */
-  }
-
-  .notification-group h1 {
-    font-size: 22px;
-    margin-bottom: 15px;
-  }
-
-  .noti-div {
-    width: 38px;
-    height: 38px;
-    margin: 5px 0 0 5px;
-    background: #007bff;
-    border: 1px solid #007bff;
-  }
-
-  .noti-Home-Icon {
-    font-size: 22px;
-  }
-
-  .nav-section img {
-    width: 32px; /* Avatar nhỏ hơn trên mobile */
-    height: 32px;
-    margin: 8px 10px 0 0;
-    border: none;
-  }
-
-  .notification-section {
-    padding: 10px;
+@media screen and (max-width: 600px) {
+  .notification-container {
+    margin: 10px;
+    padding: 15px;
     border-radius: 8px;
   }
 
-  .notification-msg {
-    gap: 10px;
+  .notification-header h2 {
+    font-size: 20px;
+  }
+
+  .mark-all-read-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .notification-item {
     padding: 10px;
-    margin-bottom: 15px;
+    gap: 10px;
   }
 
-  .notification-msg .avatar-img {
-    width: 32px; /* Avatar nhỏ hơn trên mobile */
-    height: 32px;
-    border: none;
+  .notification-avatar {
+    width: 36px;
+    height: 36px;
   }
 
-  .notification-msg p {
+  .notification-text {
     font-size: 14px;
-  }
-
-  .notification-msg span {
-    font-size: 15px;
   }
 
   .post-content {
     font-size: 13px;
   }
 
-  .notification-msg .post-preview-img {
-    max-width: 60px;
-    max-height: 60px;
-    border: none;
+  .notification-time {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .notification-container {
+    padding: 10px;
   }
 
-  .notification-time,
-  small {
+  .notification-header h2 {
+    font-size: 18px;
+  }
+
+  .mark-all-read-btn {
+    padding: 5px 10px;
     font-size: 12px;
+  }
+
+  .notification-item {
+    padding: 8px;
+  }
+
+  .notification-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .notification-text {
+    font-size: 13px;
   }
 }

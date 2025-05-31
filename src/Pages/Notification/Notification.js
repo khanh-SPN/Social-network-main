@@ -3,7 +3,7 @@ import '../Notification/Notification.css';
 import { getNotifications, markNotificationRead } from '../../api';
 import { AuthContext } from '../../index';
 
-const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+const BASE_URL = 'http://localhost:5000';
 
 const Notification = () => {
   const { userId } = useContext(AuthContext);
@@ -18,10 +18,10 @@ const Notification = () => {
       try {
         setLoading(true);
         const response = await getNotifications(page, limit);
-        console.log('Notifications fetched:', response); // Debug log
-        setNotifications(response.notifications);
+        console.log('Notifications fetched:', response);
+        setNotifications(response.notifications.filter(notif => !notif.isRead));
       } catch (error) {
-        console.error('Failed to fetch notifications:', error.response?.data?.msg || error.message);
+        console.error('Failed to fetch notifications:', error);
         setError(error.response?.data?.msg || 'Không thể tải thông báo');
       } finally {
         setLoading(false);
@@ -33,56 +33,73 @@ const Notification = () => {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await markNotificationRead(notificationId);
-      setNotifications(notifications.map(notif =>
-        notif.id === notificationId ? { ...notif, isRead: true } : notif
-      ));
-      console.log(`Notification ${notificationId} marked as read`); // Debug log
+      setNotifications(notifications.filter(notif => notif.id !== notificationId));
+      console.log(`Notification ${notificationId} marked as read and hidden`);
     } catch (error) {
-      console.error('Failed to mark notification as read:', error.response?.data?.msg || error.message);
+      console.error('Failed to mark notification as read:', error);
       setError(error.response?.data?.msg || 'Không thể đánh dấu thông báo đã đọc');
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const unreadIds = notifications.map(notif => notif.id);
+      if (unreadIds.length === 0) return;
+      await Promise.all(unreadIds.map(id => markNotificationRead(id)));
+      setNotifications([]);
+      console.log('All notifications marked as read and hidden');
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      setError(error.response?.data?.msg || 'Không thể đánh dấu tất cả thông báo đã đọc');
     }
   };
 
   return (
     <div className="notification-container">
-      <h2>Thông báo</h2>
+      <div className="notification-header">
+        <h2>Thông báo</h2>
+        {notifications.length > 0 && (
+          <button className="mark-all-read-btn" onClick={handleMarkAllAsRead}>
+            Đánh dấu tất cả đã đọc
+          </button>
+        )}
+      </div>
       {loading ? (
-        <p style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</p>
+        <p className="notification-status">Đang tải...</p>
       ) : error ? (
-        <p style={{ textAlign: 'center', padding: '20px', color: 'red' }}>{error}</p>
+        <p className="notification-status notification-error">{error}</p>
       ) : notifications.length === 0 ? (
-        <p style={{ textAlign: 'center', padding: '20px' }}>Chưa có thông báo nào</p>
+        <p className="notification-status">Chưa có thông báo mới</p>
       ) : (
         <div className="notification-list">
           {notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`notification-item ${notif.isRead ? 'read' : 'unread'}`}
-              onClick={() => !notif.isRead && handleMarkAsRead(notif.id)}
+              className="notification-item"
+              onClick={() => handleMarkAsRead(notif.id)}
             >
+              <img
+                src={notif.RelatedUser?.profilePicture ? `${BASE_URL}${notif.RelatedUser.profilePicture}` : '/images/default-profile.jpg'}
+                alt={`${notif.RelatedUser?.username || 'User'}'s avatar`}
+                className="notification-avatar"
+                onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+              />
               <div className="notification-content">
-                
-                <div className="notification-text">
-                  <p>
-                    <strong>{notif.RelatedUser?.username || 'User'}</strong>{' '}
-                    {notif.type === 'like'
-                      ? 'đã thích bài viết của bạn'
-                      : notif.type === 'comment'
-                      ? 'đã bình luận bài viết của bạn'
-                      : 'đã theo dõi bạn'}
-                  </p>
-                  {notif.relatedPost?.content && (
-                    <p className="post-content">{notif.relatedPost.content.substring(0, 50)}...</p>
-                  )}
-                  
-                  <span className="notification-time">
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </span>
-                </div>
+                <p className="notification-text">
+                  <strong>{notif.RelatedUser?.username || 'User'}</strong>{' '}
+                  {notif.type === 'like'
+                    ? 'đã thích bài viết của bạn'
+                    : notif.type === 'comment'
+                    ? 'đã bình luận bài viết của bạn'
+                    : 'đã theo dõi bạn'}
+                </p>
+                {notif.relatedPost?.content && (
+                  <p className="post-content">{notif.relatedPost.content.substring(0, 50)}...</p>
+                )}
+                <span className="notification-time">
+                  {new Date(notif.createdAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
+                </span>
               </div>
-              {!notif.isRead && (
-                <button className="mark-read-btn">Đánh dấu đã đọc</button>
-              )}
             </div>
           ))}
         </div>

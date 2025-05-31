@@ -8,6 +8,7 @@ import Notification from './Pages/Notification/Notification';
 import Login from './Pages/RegisterPage/Login';
 import SignUp from './Pages/RegisterPage/SignUp';
 import ChatPage from './Pages/Chat/ChatPage';
+import AdminPage from './Pages/Admin/AdminPage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useContext(AuthContext);
@@ -24,6 +25,7 @@ const App = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('adminToken');
     setFriendsProfile([]);
     navigate('/');
   };
@@ -59,6 +61,7 @@ const App = () => {
           <Link to="/chat" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>
             Chat
           </Link>
+          
           <button
             onClick={handleLogout}
             style={{
@@ -118,6 +121,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin" element={<AdminPage />} />
+        
         <Route path="*" element={<div style={{ padding: '20px', textAlign: 'center' }}>404 - Không tìm thấy trang</div>} />
       </Routes>
     </div>

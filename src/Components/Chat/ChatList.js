@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../index';
 import { getConversations } from '../../api';
 import './Chat.css';
 
 const BASE_URL = 'http://localhost:5000';
 
 const ChatList = ({ setSelectedUser, selectedUser }) => {
+  const { userId } = useContext(AuthContext);
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,27 +37,30 @@ const ChatList = ({ setSelectedUser, selectedUser }) => {
       ) : conversations.length === 0 ? (
         <p style={{ textAlign: 'center' }}>Chưa có cuộc trò chuyện nào</p>
       ) : (
-        conversations.map((conv) => (
-          <div
-            key={conv.id}
-            className={`chat-list-item ${selectedUser?.id === conv.user.id ? 'active' : ''}`}
-            onClick={() => {
-              console.log('Selected user:', conv.user);
-              setSelectedUser(conv.user);
-            }}
-          >
-            <img
-              src={conv.user.profilePicture ? `${BASE_URL}${conv.user.profilePicture}` : '/images/default-profile.jpg'}
-              alt={`${conv.user.username}'s profile picture`}
-              className="chat-list-img"
-              onError={(e) => (e.target.src = '/images/default-profile.jpg')}
-            />
-            <div className="chat-list-info">
-              <h4>{conv.user.username}</h4>
-              <p>{conv.lastMessage ? conv.lastMessage.substring(0, 20) + '...' : 'Chưa có tin nhắn'}</p>
+        conversations.map((conv) => {
+          if (!conv.user) return null; // Bỏ qua nếu user không hợp lệ
+          return (
+            <div
+              key={conv.id}
+              className={`chat-list-item ${selectedUser?.id === conv.user.id ? 'active' : ''}`}
+              onClick={() => {
+                console.log('Selected user:', conv.user);
+                setSelectedUser(conv.user);
+              }}
+            >
+              <img
+                src={conv.user.profilePicture ? `${BASE_URL}${conv.user.profilePicture}` : '/images/default-profile.jpg'}
+                alt={`${conv.user.username}'s profile picture`}
+                className="chat-list-img"
+                onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+              />
+              <div className="chat-list-info">
+                <h4>{conv.user.username}</h4>
+                <p>{conv.lastMessage ? conv.lastMessage.substring(0, 20) + '...' : 'Chưa có tin nhắn'}</p>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
