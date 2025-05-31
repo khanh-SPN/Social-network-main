@@ -8,6 +8,8 @@ import { FaSmile } from 'react-icons/fa';
 import { createPost, getUserProfile } from '../../api';
 import { AuthContext } from '../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const InputPost = ({ onPostCreated, setBody, body, images, setImages }) => {
   const { userId } = useContext(AuthContext);
   const [user, setUser] = useState(null);
@@ -50,7 +52,12 @@ const InputPost = ({ onPostCreated, setBody, body, images, setImages }) => {
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="i-input-box">
-            <img src={user?.profilePicture || '/default-profile.jpg'} className='i-img' alt="Profile" />
+            <img
+              src={user?.profilePicture ? `${BASE_URL}${user.profilePicture}` : '/images/default-profile.jpg'}
+              className='i-img'
+              alt="Profile"
+              onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+            />
             <input
               type="text"
               id="i-input"

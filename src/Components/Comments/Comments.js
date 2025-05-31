@@ -5,6 +5,8 @@ import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import { likeComment } from '../../api';
 import { AuthContext } from '../../index';
 
+const BASE_URL = 'http://localhost:5000'; // Có thể lấy từ biến môi trường
+
 const Comments = ({ cmt }) => {
   const { userId } = useContext(AuthContext);
   const [liked, setLiked] = useState(false);
@@ -26,7 +28,11 @@ const Comments = ({ cmt }) => {
         <div className='commentList1'>
           <div className="commentHead">
             <div>
-              <img src={cmt.profilePicture || '/default-profile.jpg'} alt={`${cmt.username}'s profile picture`} />
+              <img
+                src={cmt.profilePicture ? `${BASE_URL}${cmt.profilePicture}` : '/images/default-profile.jpg'}
+                alt={`${cmt.username}'s profile picture`}
+                onError={(e) => (e.target.src = '/images/default-profile.jpg')}
+              />
             </div>
             <p>
               <span>{cmt.username}</span>{cmt.content}

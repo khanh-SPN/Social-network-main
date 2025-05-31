@@ -69,7 +69,7 @@ const Left = () => {
         <BsBookmark className='margin' />
         <span>Saved</span>
       </div>
-      <div id='L-box' onClick={() => setBtnActive('#settings')} className={btnActive === '#settings' ? 'active' : ''}>
+      <div id='L-box' onClick={() => setBtnActive('#profile')} className={btnActive === '#settings' ? 'active' : ''}>
         <FiSettings className='margin' />
         <span>Settings</span>
       </div>
